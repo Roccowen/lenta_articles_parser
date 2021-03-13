@@ -24,22 +24,20 @@ namespace s2._3
                 }
                 var key = art.GetCategory();             
                 if (!gotCategories.ContainsKey(key))
-                {
-                    gotCategories.Add(key, 0);                    
-                }
-                    
+                    gotCategories.Add(key, 0);
+
                 if (gotCategories[key] < artCnt)
                 {
                     gotCategories[key]++;
                     WriteReceivedArticle(art, lnk);
-                    FileController.RewriteDictionary(artCategories, gotCategories);
+                    FileController.RewriteCollectionDict(artCategories, gotCategories);
                     try
                     {
                         dbController.ArticleInsert(art.GetHead(), art.GetBody(), art.GetDateTime().ToString(), art.GetCategory());
                         var end = "";
                         foreach (var item in gotCategories)
                             if (item.Value < artCnt)
-                                end += String.Format($" \"{item.Key}\" - {item.Value}");
+                                end += String.Format($"{item.Key}-{item.Value} ");
                         Console.ForegroundColor = ConsoleColor.Blue;
                         Console.WriteLine(end);
                         Console.ResetColor();
@@ -66,28 +64,55 @@ namespace s2._3
             Console.Write(lnk + "\n\r");
             Console.ResetColor();
         }
-        
+        static string GetPath()
+        {
+            Console.WriteLine("Введите директорию для сохранения данных (будет создана отдельная папка)");
+            string path = Console.ReadLine();
+            while (!System.IO.Directory.Exists(path))
+            {
+                Console.WriteLine("Указанная директория не существует");
+                path = Console.ReadLine();               
+            }
+            path += "/lenta_articles_parser/";
+            System.IO.Directory.CreateDirectory(path);
+            return path;
+        }
+        static int GetArtCount()
+        {
+            Console.WriteLine("Введите количество статей по каждоый категориии или 0 если нужны все");
+            string input = Console.ReadLine();
+            int artCnt = -1;
+            while (!int.TryParse(input, out artCnt) || artCnt < 0)
+            {
+                Console.WriteLine("Некорректный ввод");
+                input = Console.ReadLine();
+            }
+            if (artCnt == 0)
+                artCnt = int.MaxValue;
+            return artCnt;
+        }
         static Dictionary<string, int> gotCategories;
         static HashSet<string> gotArticles;
         static DBController dbController;
-        static int artCnt = 10000;
-        static int days = 365;
-        static string artCategories = @"C:\articlesDS\articlesCategories.txt";
-        static string artCollection = @"C:\articlesDS\articlesCollection.txt";
-        static string DBpath = @"C:\articlesDS\articles.db";
+        static int artCnt = 0;
+        static string artCategories = "";
+        static string artCollection = "";
+        static string DBpath = "";
 
         static void Main(string[] args)
         {
-            gotCategories = FileController.GetDictionary(artCategories);
+            var path = GetPath();
+            artCnt = GetArtCount();
+            artCategories = path + "articlesCategories.txt";
+            artCollection = path + "articlesCollection.txt";
+            DBpath = path + "articles.db";
+            gotCategories = FileController.GetCollectionDicti(artCategories);
             gotArticles = FileController.GetHashSet(artCollection);
             dbController = new DBController(DBpath);
 
-            var baseUrl = "https://lenta.ru/";
-            DateTime dt = DateTime.Now;
-
-            for (int i = 0; i < days; i++)
+            var baseUrl = "https://lenta.ru/";           
+            for (DateTime dt = DateTime.Now; dt.Year >= 2001; dt = dt.AddDays(-1))
             {
-                dt = dt.AddDays(-1);
                 Runner(baseUrl + dt.Year.ToString()
                     + "/" + String.Format("{0:d2}", dt.Month)
                     + "/" + String.Format("{0:d2}", dt.Day)

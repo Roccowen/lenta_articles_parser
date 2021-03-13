@@ -14,31 +14,40 @@ namespace s2._3
         }
         public static void AppendLine(string pathToFile, string line)
         {
-            FileController.FileCheck(pathToFile);            
+            FileController.FileCheck(pathToFile);
             var writer = new StreamWriter(pathToFile, append: true);
             writer.WriteLine(line);
             writer.Close();
             writer.Dispose();
         }
-        public static void RewriteDictionary(string pathToFile, Dictionary<string, int> collection)
+        public static void RewriteCollectionDict(string pathToFile, Dictionary<string, int> collection)
         {
             FileController.FileCheck(pathToFile);
             var writer = new StreamWriter(pathToFile);
             foreach (var item in collection)
-                writer.WriteLine("{0} {1}", item.Key, item.Value);           
+                writer.WriteLine("{0} {1}", item.Key, item.Value);
+            writer.Close();
+            writer.Dispose();
+        }
+        public static void RewriteSettingsDict(string pathToFile, Dictionary<string, string> settings)
+        {
+            FileController.FileCheck(pathToFile);
+            var writer = new StreamWriter(pathToFile);
+            foreach (var item in settings)
+                writer.WriteLine("{0} {1}", item.Key, item.Value);
             writer.Close();
             writer.Dispose();
         }
         public static HashSet<string> GetHashSet(string pathToCollect)
         {
             FileController.FileCheck(pathToCollect);
-            var reader = new StreamReader(pathToCollect);           
+            var reader = new StreamReader(pathToCollect);
             var collection = reader.ReadToEnd().Split().ToHashSet<string>();
             reader.Close();
             reader.Dispose();
             return collection;
         }
-        public static Dictionary<string,int> GetDictionary(string pathToFile)
+        public static Dictionary<string, int> GetCollectionDicti(string pathToFile)
         {
             FileController.FileCheck(pathToFile);
             var reader = new StreamReader(pathToFile);
@@ -49,6 +58,18 @@ namespace s2._3
             reader.Close();
             reader.Dispose();
             return collection;
+        }
+        public static Dictionary<string, string> GetSettingsDict(string pathToFile)
+        {
+            FileController.FileCheck(pathToFile);
+            var reader = new StreamReader(pathToFile);
+            var settings = new Dictionary<string, string>();
+            string line;
+            while ((line = reader.ReadLine()) != null)
+                settings.Add(line.Split()[0], line.Split()[1]);
+            reader.Close();
+            reader.Dispose();
+            return settings;
         }
     }
 }
